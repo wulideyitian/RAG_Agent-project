@@ -1,0 +1,29 @@
+# Web 框架
+streamlit>=1.28.0
+
+# LangChain 核心库
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-community>=0.0.10
+langchain-text-splitters>=0.0.1
+
+# LangChain Chroma 向量库集成
+langchain-chroma>=0.1.0
+
+# 向量数据库
+chromadb>=0.4.0
+
+# 通义千问模型（DashScope）
+dashscope>=1.14.0
+
+# YAML 配置文件读取
+pyyaml>=6.0.1
+
+# 日志处理
+python-json-logger>=2.0.7
+
+# PDF 文件处理
+pypdf2>=3.0.0
+
+# 文本处理
+regex>=2023.10.3

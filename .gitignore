@@ -8,10 +8,15 @@ env/
 .venv/
 ENV/
 
+# Python 依赖包（可选，如果不想提交依赖）
+# requirements.txt
+
 # 编译文件
 __pycache__/
 *.py[cod]
 *.so
+*.pyd
+*.class
 
 # 大模型/缓存/日志
 *.log
@@ -23,3 +28,47 @@ models/
 
 # 系统文件
 .DS_Store
+Thumbs.db
+
+# 配置文件（敏感信息）
+*.env
+.env.local
+.env.*.local
+
+# 数据库文件（向量库数据）
+chroma_db/*.db
+*.sqlite3
+
+# MD5 记录文件
+md5.text
+
+# 上传文件
+uploads/
+data/uploads/
+
+# 临时文件
+*.swp
+*.swo
+*~
+
+# IDE 配置（可选）
+.vscode/
+.settings/
+.project
+.pydevproject
+
+# Jupyter Notebook 检查点
+.ipynb_checkpoints/
+
+# pytest 缓存
+.pytest_cache/
+
+# coverage 报告
+htmlcov/
+.coverage
+.coverage.*
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
