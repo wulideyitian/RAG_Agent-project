@@ -1,0 +1,25 @@
+# PyCharm 缓存
+.idea/
+*.iml
+
+# Python 虚拟环境
+venv/
+env/
+.venv/
+ENV/
+
+# 编译文件
+__pycache__/
+*.py[cod]
+*.so
+
+# 大模型/缓存/日志
+*.log
+*.tmp
+.cache/
+models/
+*.bin
+*.pth
+
+# 系统文件
+.DS_Store

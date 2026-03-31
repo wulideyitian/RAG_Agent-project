@@ -1,0 +1,10 @@
+collection_name: laptop_knowledge_base
+persist_directory: chroma_db/laptop.db
+k: 5
+data_path: data/
+md5_hex_store: md5.text
+allow_knowledge_file_type: ["txt", "pdf"]
+
+chunk_size: 800
+chunk_overlap: 200
+separators: ["\n\n", "\n", ".", "!", "?", "。", "！", "？", " ", ""]
