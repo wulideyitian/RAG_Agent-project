@@ -1,4 +1,22 @@
-# PyCharm 缓存
+# ========== 数据文件（不提交知识库文档）==========
+# 知识库文档（PDF、Word 等二进制文件）
+data/*.pdf
+data/*.docx
+data/*.doc
+
+# 知识库文本文件（如需分享可注释掉）
+# data/*.txt
+# data/*.csv
+# data/*.md
+
+# 外部数据文件
+data/external/*.csv
+
+# 上传的文件目录
+data/uploads/
+uploads/
+
+# ========== PyCharm 缓存 ==========
 .idea/
 *.iml
 
@@ -36,7 +54,7 @@ Thumbs.db
 .env.*.local
 
 # 数据库文件（向量库数据）
-chroma_db/*.db
+chroma_db/*
 *.sqlite3
 
 # MD5 记录文件
@@ -72,3 +90,14 @@ htmlcov/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Node.js (前端)
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.DS_Store

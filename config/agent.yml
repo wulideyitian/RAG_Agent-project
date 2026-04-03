@@ -1,1 +1,3 @@
 external_data_path: data/external/records.csv
+fault_cases_path: data/fault_cases.md
+laptop_specs_path: data/laptop_specs.csv
