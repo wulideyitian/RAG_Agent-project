@@ -2,6 +2,7 @@
 文本分块服务（重点优化）
 提供多种分块策略
 """
+import re
 from typing import List, Optional
 from langchain_core.documents import Document
 from langchain_text_splitters import (
@@ -17,12 +18,29 @@ class TextSplitterService:
     """文本分块服务"""
     
     def __init__(self):
-        # 默认配置
-        self.chunk_size = chroma_conf.get("chunk_size", 500)
-        self.chunk_overlap = chroma_conf.get("chunk_overlap", 50)
-        self.separators = chroma_conf.get("separators", ["\n\n", "\n", "。", ".", "!", "！", "?", "？", " ", ""])
+        # 默认配置 - 调小 chunk_size 确保中文长文本被分割
+        self.chunk_size = chroma_conf.get("chunk_size", 100)  # 从 500 降低到 100
+        self.chunk_overlap = chroma_conf.get("chunk_overlap", 20)  # 从 50 降低到 20
+        # 新增中文专属分隔符优先级，符合中文语法
+        # 优先级：段落 > 句子 > 短语 > 字符
+        self.separators = [
+            "\n\n",      # 段落分隔（最高优先级）
+            "\n",        # 换行
+            "。",        # 中文句号
+            "！",        # 中文感叹号
+            "？",        # 中文问号
+            ".",         # 英文句号
+            "!",         # 英文感叹号
+            "?",         # 英文问号
+            "；",        # 中文分号
+            ";",         # 英文分号
+            "，",        # 中文逗号
+            ",",         # 英文逗号
+            " ",         # 空格
+            "",          # 字符级别（最低优先级）
+        ]
         
-        # 初始化分块器
+        # 初始化分块器（使用优化后的中文分隔符）
         self.recursive_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
@@ -49,13 +67,20 @@ class TextSplitterService:
         :return: 分割后的文档列表
         """
         try:
+            # 过滤空文档
+            valid_documents = [doc for doc in documents if doc.page_content and doc.page_content.strip()]
+            
+            if not valid_documents:
+                logger.warning("没有有效内容可分割")
+                return []
+            
             if strategy == "recursive":
-                chunks = self.recursive_splitter.split_documents(documents)
+                chunks = self.recursive_splitter.split_documents(valid_documents)
             elif strategy == "character":
-                chunks = self.character_splitter.split_documents(documents)
+                chunks = self.character_splitter.split_documents(valid_documents)
             else:
                 logger.warning(f"未知的分块策略：{strategy}，使用默认 recursive")
-                chunks = self.recursive_splitter.split_documents(documents)
+                chunks = self.recursive_splitter.split_documents(valid_documents)
             
             logger.info(f"文档分割完成，共{len(chunks)}个文本块")
             return chunks
@@ -78,6 +103,11 @@ class TextSplitterService:
         :return: Document 列表
         """
         try:
+            # 检查空文本 - 返回包含空内容的 Document
+            if not text or not text.strip():
+                logger.warning("分割空文本")
+                return [Document(page_content="", metadata=metadata or {})]
+            
             temp_doc = Document(page_content=text, metadata=metadata or {})
             return self.split_documents([temp_doc], strategy)
             
@@ -89,8 +119,8 @@ class TextSplitterService:
         self, 
         text: str, 
         source: str = "",
-        min_chunk_size: int = 100,
-        max_chunk_size: int = 1000
+        min_chunk_size: int = 50,   # 从 100 降低到 50
+        max_chunk_size: int = 500   # 从 1000 降低到 500
     ) -> List[Document]:
         """
         自适应分块（根据文本特征自动选择策略）
@@ -100,9 +130,15 @@ class TextSplitterService:
         :param max_chunk_size: 最大块大小
         :return: Document 列表
         """
+        # 检查空文本 - 返回空 Document
+        if not text or not text.strip():
+            logger.warning("自适应分割空文本")
+            return [Document(page_content="", metadata={"source": source})]
+        
         # 检测文本特征
         has_sections = "\n\n" in text
-        has_sentences = any(c in text for c in ".!.!??.!")
+        # 优化句子判断：包含中英文标点
+        has_sentences = bool(re.search(r'[.!.,;:?!.!?,;:"\']{1,}', text))
         
         # 动态调整分块策略
         if has_sections and len(text) > max_chunk_size:
@@ -113,14 +149,14 @@ class TextSplitterService:
                 separators=["\n\n", "\n"],
             )
         elif has_sentences:
-            # 有句子结构的文本，使用标准配置
+            # 有句子结构的文本，使用标准配置（优化的中文分隔符）
             splitter = self.recursive_splitter
         else:
             # 无结构文本，使用较小的 chunk_size
             splitter = RecursiveCharacterTextSplitter(
                 chunk_size=min_chunk_size,
                 chunk_overlap=min_chunk_size // 2,
-                separators=[""],
+                separators=self.separators,  # 使用优化的中文分隔符
             )
         
         try:

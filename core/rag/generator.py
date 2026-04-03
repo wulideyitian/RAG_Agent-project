@@ -58,7 +58,7 @@ class RAGGenerator:
         
         for i, doc in enumerate(docs, 1):
             context_parts.append(
-                f"【参考资料{i}】：{doc.page_content} | 来源：{doc.metadata.get('source', '未知')}"
+                f"【参考资料 {i}】：{doc.page_content} | 来源：{doc.metadata.get('source', '未知')}"
             )
         
         return "\n\n".join(context_parts)

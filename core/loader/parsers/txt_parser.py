@@ -43,6 +43,11 @@ class TXTParser:
             with open(filepath, 'r', encoding=encoding, errors='replace') as f:
                 content = f.read()
             
+            # 检查是否为空文件
+            if not content or not content.strip():
+                logger.warning(f"TXT 文件{filepath}为空文件")
+                return []
+            
             # 清理文本
             content = self.text_cleaner.clean(content, 'txt')
             

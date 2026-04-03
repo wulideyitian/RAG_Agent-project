@@ -2,6 +2,7 @@
 分块质量检查器
 评估和优化文本分块的质量
 """
+import re
 from typing import List, Dict
 from langchain_core.documents import Document
 from app.utils.logger_handler import logger
@@ -13,7 +14,9 @@ class QualityChecker:
     def __init__(self):
         self.min_chunk_length = 50  # 最小块长度
         self.max_chunk_length = 2000  # 最大块长度
-        self.similarity_threshold = 0.9  # 相似度阈值
+        self.similarity_threshold = 0.8  # 相似度阈值修正为标准值
+        # 有效字符比例阈值
+        self.valid_char_ratio_threshold = 0.5  # 兼容所有正常文本
     
     def check_chunks(self, chunks: List[Document]) -> List[Document]:
         """
@@ -57,20 +60,43 @@ class QualityChecker:
     
     def _check_content_quality(self, content: str) -> bool:
         """检查内容质量"""
-        # 计算有效字符比例
-        valid_chars = sum(1 for c in content if c.isalnum() or c.isspace())
-        total_chars = len(content)
+        stripped = content.strip()
+        
+        # 空文本直接返回 False
+        if not stripped:
+            return False
+        
+        # 统一有效字符正则：支持中文、英文、数字、常用标点
+        # \u4e00-\u9fff: 中文汉字
+        # \u3000-\u303f: 中文标点符号
+        # \uff00-\uffef: 全角字符（包括英文、数字、标点）
+        # a-zA-Z0-9: 英文字母和数字
+        # \s: 空白字符
+        valid_pattern = re.compile(
+            r'[\u4e00-\u9fff\u3000-\u303f\uff00-\uffefa-zA-Z0-9\s]'
+        )
+        valid_chars = len(valid_pattern.findall(stripped))
+        total_chars = len(stripped)
         
         if total_chars == 0:
             return False
         
         ratio = valid_chars / total_chars
-        if ratio < 0.6:
+        if ratio < self.valid_char_ratio_threshold:
             return False
         
-        # 检查是否有实际语义内容（至少有一个完整句子）
-        has_sentence = any(punct in content for punct in '.!.!??.!,,;:')
-        if not has_sentence:
+        # 优化完整句子判断：避免标点文本被误判
+        # 中文标点：.!.,;:?!
+        # 英文标点：.,;:!?"'
+        has_sentence = bool(re.search(r'[.!.,;:?!"\']{1,}', stripped))
+        has_meaningful_content = len(stripped.split()) >= 3  # 至少 3 个单词/中文字符
+        
+        # 长文本且有实际内容，即使没有标点也接受
+        if len(stripped) >= self.min_chunk_length and has_meaningful_content:
+            return True
+        
+        # 必须满足：有句子结构 或 有实际意义内容
+        if not (has_sentence or has_meaningful_content):
             return False
         
         return True
@@ -85,7 +111,15 @@ class QualityChecker:
         content1 = chunk1.page_content.strip()
         content2 = chunk2.page_content.strip()
         
-        # 简单的前缀比较（可以优化为更复杂的相似度算法）
+        # 修复空文本重复判断逻辑：任一为空则不视为重复
+        if not content1 or not content2:
+            return False
+        
+        # 完全相同的情况
+        if content1 == content2:
+            return True
+        
+        # 计算相似度（基于字符级别）
         min_len = min(len(content1), len(content2))
         if min_len == 0:
             return False
@@ -96,6 +130,7 @@ class QualityChecker:
             for c1, c2 in zip(content1[:compare_len], content2[:compare_len])
         ) / compare_len
         
+        # 使用标准相似度阈值 0.8
         return similarity > self.similarity_threshold
     
     def optimize_chunks(self, chunks: List[Document]) -> List[Document]:

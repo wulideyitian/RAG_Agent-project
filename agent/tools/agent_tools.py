@@ -39,6 +39,19 @@ user_devices = {
 }
 
 # 从 CSV 文件中动态加载用户设备信息
+# 缓存配置文件路径，避免重复计算
+_config_paths = {}
+
+def _get_config_path(key: str) -> str:
+    """
+    获取配置路径并缓存
+    :param key: 配置键名
+    :return: 绝对路径
+    """
+    if key not in _config_paths:
+        _config_paths[key] = get_abs_path(agent_conf[key])
+    return _config_paths[key]
+
 def _load_user_devices_from_csv():
     """
     从 records.csv 中加载所有用户 ID 和设备型号
@@ -240,19 +253,6 @@ def fill_context_for_report():
 
 
 # ===== 工具函数实现（普通函数，可被其他工具内部调用）=====
-
-# 缓存配置文件路径，避免重复计算
-_config_paths = {}
-
-def _get_config_path(key: str) -> str:
-    """
-    获取配置路径并缓存
-    :param key: 配置键名
-    :return: 绝对路径
-    """
-    if key not in _config_paths:
-        _config_paths[key] = get_abs_path(agent_conf[key])
-    return _config_paths[key]
 
 def _laptop_spec_impl(model_name: str) -> str:
     """

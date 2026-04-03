@@ -4,6 +4,7 @@
 """
 import re
 from app.utils.logger_handler import logger
+from core.preprocessing.quality_checker import QualityChecker
 
 
 class TextCleaner:
@@ -17,6 +18,8 @@ class TextCleaner:
             'compress_newlines': (r'\n{3,}', '\n\n'),  # 压缩连续空行
             'remove_control_chars': (r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', ''),  # 控制字符
         }
+        # 复用 QualityChecker 的质量校验逻辑
+        self.quality_checker = QualityChecker()
     
     def clean(self, text: str, file_type: str = 'txt') -> str:
         """
@@ -93,18 +96,18 @@ class TextCleaner:
     
     def validate_quality(self, text: str, min_length: int = 50) -> bool:
         """
-        简单验证文本质量
+        简单验证文本质量（复用 QualityChecker 的逻辑）
         :param text: 待验证文本
         :param min_length: 最小有效长度
         :return: True 如果质量合格
         """
-        if not text or len(text.strip()) < min_length:
+        if not text:
             return False
         
-        # 检查是否大部分是特殊字符
-        valid_char_ratio = sum(1 for c in text if c.isalnum() or c.isspace()) / max(len(text), 1)
-        if valid_char_ratio < 0.6:
-            logger.warning(f"文本有效字符比例过低：{valid_char_ratio}")
+        stripped_text = text.strip()
+        if len(stripped_text) < min_length:
             return False
         
-        return True
+        # 复用 QualityChecker 的内容质量检查逻辑
+        # 注意：_check_content_quality 返回 True 表示合格，False 表示不合格
+        return self.quality_checker._check_content_quality(text)

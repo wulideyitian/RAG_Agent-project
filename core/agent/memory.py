@@ -3,6 +3,7 @@
 管理多轮对话的上下文信息
 """
 import json
+import copy
 from typing import Dict, List
 
 
@@ -40,8 +41,8 @@ class SessionMemory:
         self.memory["preferences"][key] = value
     
     def get_memory(self) -> Dict:
-        """获取完整记忆"""
-        return self.memory.copy()
+        """获取完整记忆（返回深拷贝，防止外部修改污染原数据）"""
+        return copy.deepcopy(self.memory)
     
     def to_json(self) -> str:
         """转为 JSON 字符串"""
