@@ -41,8 +41,8 @@ def enable_logging():
     logging.shutdown()
 
 
-# 导入通用测试工具（使用相对路径）
-from utils.test_helpers import (
+# 导入通用测试工具（使用绝对路径）
+from tests.utils.test_helpers import (
     temp_file,
     temp_dir,
     sample_text,

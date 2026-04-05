@@ -1,7 +1,6 @@
 import os
 from app.utils.logger_handler import logger
 from langchain_core.tools import tool
-import random
 from app.utils.config_handler import agent_conf
 from app.utils.path_tool import get_abs_path
 import json
@@ -22,23 +21,6 @@ def get_rag_generator():
             return None
     return _rag_generator
 
-# 会话级记忆（重启后清空）
-session_memory = {
-    "mentioned_models": [],
-    "budget": None,
-    "usage_scenario": None,
-    "location": None,
-    "preferences": {}
-}
-
-# 模拟用户笔记本设备信息库（扩展至 1070 个用户）
-user_devices = {
-    "1001": {"model": "联想 ThinkPad X1 Carbon", "cpu": "i7-1355U", "ram": "16GB", "storage": "512GB SSD", "purchase_date": "2024-03"},
-    "1002": {"model": "戴尔 XPS 15 9530", "cpu": "i9-13900H", "ram": "32GB", "storage": "1TB SSD", "gpu": "RTX 4060", "purchase_date": "2024-05"},
-    "1003": {"model": "MacBook Pro 14 M3", "cpu": "M3 Pro", "ram": "18GB", "storage": "512GB SSD", "purchase_date": "2024-06"},
-}
-
-# 从 CSV 文件中动态加载用户设备信息
 # 缓存配置文件路径，避免重复计算
 _config_paths = {}
 
@@ -52,42 +34,7 @@ def _get_config_path(key: str) -> str:
         _config_paths[key] = get_abs_path(agent_conf[key])
     return _config_paths[key]
 
-def _load_user_devices_from_csv():
-    """
-    从 records.csv 中加载所有用户 ID 和设备型号
-    扩展 user_devices 字典以支持更多用户
-    """
-    try:
-        external_data_path = _get_config_path("external_data_path")
-        if not os.path.exists(external_data_path):
-            return
-        
-        with open(external_data_path, "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                user_id = row.get("用户 ID", "").strip()
-                model = row.get("笔记本型号", "").strip()
-                
-                if user_id and model and user_id not in user_devices:
-                    # 为新用户创建默认设备信息
-                    user_devices[user_id] = {
-                        "model": model,
-                        "cpu": "未知",
-                        "ram": "未知",
-                        "storage": "未知",
-                        "purchase_date": "未知"
-                    }
-    except Exception as e:
-        logger.error(f"[_load_user_devices_from_csv] 加载失败：{e}")
 
-# 初始化时加载用户设备
-_load_user_devices_from_csv()
-
-user_ids = list(user_devices.keys())
-month_arr = ["2025-01", "2025-02", "2025-03", "2025-04", "2025-05", "2025-06",
-             "2025-07", "2025-08", "2025-09", "2025-10", "2025-11", "2025-12"]
-
-external_data = {}
 
 
 @tool(description="RAG 检索工具：从向量库精准检索笔记本相关资料。入参 query 为检索词，支持：'选购指南'、'故障排查'、'硬件知识'、'软件系统'、'维护保养'、'使用技巧'等维度。返回匹配的专业解答。")
@@ -103,153 +50,21 @@ def rag_summarize(query: str) -> str:
     return rag.rag_summarize(query)
 
 
-@tool(description="获取指定城市的天气环境信息，用于判断该环境对笔记本使用的影响（如潮湿需防潮、高温注意散热）。入参 city 为城市名。")
-def get_weather(city: str) -> str:
-    """
-    获取城市天气信息，用于环境适配建议
-    :param city: 城市名称，如 '深圳'、'北京'
-    :return: 天气信息字符串，包含气温、湿度、降雨概率
-    """
-    # TODO: 实际项目中应接入真实天气 API
-    weather_data = {
-        "深圳": "气温 28℃，湿度 85%，多云，近期潮湿",
-        "合肥": "气温 26℃，湿度 70%，晴，空气干燥",
-        "杭州": "气温 27℃，湿度 80%，小雨，潮湿闷热",
-        "北京": "气温 22℃，湿度 45%，晴，空气干燥",
-    }
-    return weather_data.get(city, f"城市{city}天气为晴天，气温 26 摄氏度，空气湿度 50%")
-
-
-@tool(description="获取当前发起请求的用户所处的城市名称，用于提供地域适配的笔记本使用建议（如南方防潮、北方防尘）。无入参。")
-def get_user_location() -> str:
-    """
-    获取用户所在城市
-    :return: 城市名称字符串
-    """
-    return random.choice(["深圳", "合肥", "杭州", "北京"])
-
-
-@tool(description="获取用户的唯一标识 ID（数字字符串），用于检索该用户的笔记本设备信息和使用记录。无入参。")
-def get_user_id() -> str:
-    """
-    获取当前用户 ID
-    :return: 用户 ID 字符串，如 '1001'
-    """
-    return random.choice(user_ids)
-
-
-@tool(description="获取系统当前月份，格式固定为 YYYY-MM（如'2025-06'），用于生成当月的笔记本使用报告。无入参。")
-def get_current_month() -> str:
-    """
-    获取当前月份
-    :return: 月份字符串，格式 YYYY-MM
-    """
-    return random.choice(month_arr)
-
-
-@tool(description="获取用户的笔记本设备详细信息，包括型号、CPU、内存、硬盘、显卡等配置。入参 user_id 为用户 ID，可选。若未指定自动获取当前用户。")
-def get_user_device_info(user_id: str = None) -> str:
+@tool(description="获取用户的笔记本设备详细信息，包括型号、CPU、内存、硬盘、显卡等配置。入参 user_id 为用户 ID（必需）。")
+def get_user_device_info(user_id: str) -> str:
     """
     获取用户笔记本设备信息
-    :param user_id: 用户 ID，可选参数，若不传则使用当前用户
+    :param user_id: 用户 ID（必需参数，由前端/接口传入固定值）
     :return: 设备配置信息 JSON 字符串
     """
-    if not user_id:
-        user_id = get_user_id()
-    
-    device = user_devices.get(user_id)
-    if not device:
-        logger.warning(f"[get_user_device_info] 未找到用户{user_id}的设备信息")
-        return "未找到该用户的设备信息"
-    
-    return json.dumps(device, ensure_ascii=False)
+    # TODO: 实际项目中应从数据库查询用户设备信息
+    # 这里返回示例数据
+    logger.info(f"[get_user_device_info] 查询用户{user_id}的设备信息")
+    return json.dumps({
+        "user_id": user_id,
+        "message": "请配置真实的用户设备数据库"
+    }, ensure_ascii=False)
 
-
-def generate_external_data():
-    """
-    生成笔记本电脑用户使用记录数据
-    数据结构：{
-        "user_id": {
-            "month": {
-                "usage_hours": 使用时长,
-                "battery_health": 电池健康度,
-                "temperature": 温度表现,
-                "maintenance": 维护记录
-            }
-        }
-    }
-    """
-    if not external_data:
-        external_data_path = _get_config_path("external_data_path")
-        
-        if not os.path.exists(external_data_path):
-            raise FileNotFoundError(f"外部数据文件{external_data_path}不存在")
-        
-        with open(external_data_path, "r", encoding="utf-8") as f:
-            for line in f.readlines()[1:]:
-                arr: list[str] = line.strip().split(",")
-                
-                if len(arr) < 6:
-                    continue
-                
-                user_id: str = arr[0].replace('"', "")
-                model: str = arr[1].replace('"', "")
-                usage_desc: str = arr[2].replace('"', "")
-                hardware_status: str = arr[3].replace('"', "")
-                comparison: str = arr[4].replace('"', "")
-                month: str = arr[5].replace('"', "")
-                
-                if user_id not in external_data:
-                    external_data[user_id] = {}
-                
-                # 解析电池健康度（从文本中提取）
-                battery_health = "95%"
-                if "电池健康度" in hardware_status:
-                    import re
-                    match = re.search(r'电池健康度 (\d+)%', hardware_status)
-                    if match:
-                        battery_health = f"{match.group(1)}%"
-                
-                external_data[user_id][month] = {
-                    "型号": model,
-                    "使用时长": usage_desc,
-                    "硬件状态": hardware_status,
-                    "对比分析": comparison,
-                    "电池健康度": battery_health,
-                }
-
-
-@tool(description="检索指定用户在指定月份的笔记本使用记录，包含使用时长、电池健康、散热表现、维护记录等。入参：user_id（用户 ID）、month（月份 YYYY-MM）。")
-def fetch_external_data(user_id: str, month: str) -> str:
-    """
-    获取用户笔记本使用记录
-    :param user_id: 用户 ID
-    :param month: 月份，格式 YYYY-MM
-    :return: 使用记录结构化字符串
-    """
-    generate_external_data()
-    
-    try:
-        data = external_data[user_id][month]
-        return (
-            f"【{data['型号']}】使用记录\n"
-            f"• 使用时长：{data['使用时长']}\n"
-            f"• 硬件状态：{data['硬件状态']}\n"
-            f"• 电池健康：{data['电池健康度']}\n"
-            f"• 对比分析：{data['对比分析']}"
-        )
-    except KeyError:
-        logger.warning(f"[fetch_external_data] 未能检索到用户{user_id}在{month}的使用记录")
-        return f"未找到用户{user_id}在{month}的使用记录"
-
-
-@tool(description="生成笔记本专属使用报告的工具。调用后会自动注入上下文，为后续报告生成提供结构化数据支撑。仅在用户明确要求生成/查询使用报告时调用。无入参，无返回值。")
-def fill_context_for_report():
-    """
-    为笔记本报告生成场景注入上下文信息
-    仅在用户要求生成报告时调用，非报告场景禁止调用
-    """
-    return "fill_context_for_report 已调用，报告上下文已注入"
 
 
 # ===== 工具函数实现（普通函数，可被其他工具内部调用）=====
@@ -276,10 +91,6 @@ def _laptop_spec_impl(model_name: str) -> str:
                     
                 # 模糊匹配型号
                 if model_name.lower() in row["型号"].lower() or row["型号"].lower() in model_name.lower():
-                    # 记录到记忆中
-                    if row["型号"] not in session_memory["mentioned_models"]:
-                        session_memory["mentioned_models"].append(row["型号"])
-                    
                     spec_info = {
                         "型号": row.get("型号", "未知"),
                         "CPU": row.get("CPU", "未知"),
@@ -337,8 +148,6 @@ def model_compare_tool(model_a: str, model_b: str) -> str:
                 for target_model in [model_a, model_b]:
                     if target_model.lower() in row["型号"].lower() or row["型号"].lower() in target_model.lower():
                         models_data[row["型号"]] = row
-                        if row["型号"] not in session_memory["mentioned_models"]:
-                            session_memory["mentioned_models"].append(row["型号"])
         
         if len(models_data) < 2:
             return f"未能找到两个型号的完整信息，当前找到：{list(models_data.keys())}"
@@ -591,34 +400,12 @@ def purchase_recommend_tool(budget: str, usage: str) -> str:
             
             result += "\n"
         
-        # 记录到记忆
-        for rec in recommendations[:5]:
-            if rec["型号"] not in session_memory["mentioned_models"]:
-                session_memory["mentioned_models"].append(rec["型号"])
-        session_memory["budget"] = budget
-        session_memory["usage_scenario"] = usage
-        
         return result
     
     except Exception as e:
         logger.error(f"[purchase_recommend_tool] 推荐失败：{str(e)}")
         return "推荐失败，请稍后重试"
 
-
-@tool(description="对话记忆工具：获取之前对话中提到的笔记本型号、预算、偏好等信息，实现多轮对话连贯性。无入参，返回记忆字典。")
-def memory_tool() -> str:
-    """
-    获取会话记忆信息
-    :return: JSON 格式的记忆字典
-    """
-    memory_info = {
-        "提到的型号": session_memory["mentioned_models"],
-        "预算": session_memory["budget"],
-        "用途场景": session_memory["usage_scenario"],
-        "地理位置": session_memory["location"],
-        "偏好": session_memory["preferences"]
-    }
-    return json.dumps(memory_info, ensure_ascii=False, indent=2)
 
 
 @tool(description="性能计算工具：估算显卡功耗、游戏帧率、续航时间等。入参 gpu_model 为显卡型号（如'RTX 4060'），可选 game 为游戏名称。返回功耗值、预估帧率等数据。")
@@ -682,44 +469,3 @@ def performance_calc_tool(gpu_model: str, game: str = None) -> str:
     
     return result
 
-
-@tool(description="格式化输出工具：将回答整理为清单、步骤、表格等结构化格式。入参 content 为原始内容，format_type 为格式类型（list/steps/table）。返回 Markdown 格式的结构化文本。")
-def structured_output_tool(content: str, format_type: str = "list") -> str:
-    """
-    格式化工具
-    :param content: 待格式化的内容
-    :param format_type: 格式类型（list-清单、steps-步骤、table-表格）
-    :return: Markdown 格式的结构化文本
-    """
-    if format_type == "list":
-        # 转换为清单格式
-        lines = content.strip().split("\n")
-        result = "【内容清单】\n\n"
-        for line in lines:
-            if line.strip():
-                result += f"• {line.strip()}\n"
-        return result
-    
-    elif format_type == "steps":
-        # 转换为步骤格式
-        lines = content.strip().split("\n")
-        result = "【操作步骤】\n\n"
-        for i, line in enumerate(lines, 1):
-            if line.strip():
-                result += f"Step{i}: {line.strip()}\n"
-        return result
-    
-    elif format_type == "table":
-        # 简单表格转换（假设内容为键值对）
-        lines = content.strip().split("\n")
-        result = "| 项目 | 内容 |\n|------|------|\n"
-        for line in lines:
-            if ":" in line:
-                key, value = line.split(":", 1)
-                result += f"| {key.strip()} | {value.strip()} |\n"
-            elif line.strip():
-                result += f"| {line.strip()} | - |\n"
-        return result
-    
-    else:
-        return content

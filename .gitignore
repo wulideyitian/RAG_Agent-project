@@ -1,3 +1,213 @@
+# ========== Python 相关 ==========
+# Python 编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.class
+
+# Python 虚拟环境
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python 依赖
+# requirements.txt  # 通常提交依赖文件
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.env.local
+.env.*.local
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ========== Node.js / 前端相关 ==========
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/pnp.js
+
+# Testing
+frontend/coverage
+
+# Production builds
+frontend/build
+frontend/dist
+frontend/out
+frontend/.next
+
+# Misc
+frontend/.DS_Store
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.env.local
+frontend/.env.*.local
+
+# ========== IDE 相关 ==========
+# PyCharm
+.idea/
+*.iml
+*.iws
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# IntelliJ
+*.ipr
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+.pydevproject
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ========== 系统文件 ==========
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ========== 日志与缓存 ==========
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
+
+# ========== 数据库与向量库 ==========
+chroma_db/
+*.sqlite3
+*.db
+
+# ========== MD5 记录 ==========
+md5.txt
+md5.text
+
 # ========== 数据文件（不提交知识库文档）==========
 # 知识库文档（PDF、Word 等二进制文件）
 data/*.pdf
@@ -13,90 +223,21 @@ data/*.md
 data/external/*.csv
 
 # 上传的文件目录
-data/uploads/
+data/uploads/*
+!data/uploads/.gitkeep
 
-# ========== PyCharm 缓存 ==========
-.idea/
-*.iml
+# ========== 配置文件（敏感信息）==========
+# 包含 API Key 等敏感信息的配置文件
+config/local.yml
+config/secrets.yml
+*.secret
 
-# Python 虚拟环境
-venv/
-env/
-.venv/
-ENV/
-
-# Python 依赖包（可选，如果不想提交依赖）
-# requirements.txt
-
-# 编译文件
-__pycache__/
-*.py[cod]
-*.so
-*.pyd
-*.class
-
-# ========== 日志与缓存 ==========
-# 日志文件
-logs/
-*.log
-
-# 临时文件和缓存
-*.tmp
-.cache/
-models/
-*.bin
-*.pth
-
-# 系统文件
+# ========== 其他 ==========
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-
-# 配置文件（敏感信息）
-*.env
-.env.local
-.env.*.local
-
-# 数据库文件（向量库数据）
-chroma_db/*
-*.sqlite3
-
-# MD5 记录文件
-md5.text
-
-# 临时文件
-*.swp
-*.swo
-*~
-
-# IDE 配置（可选）
-.vscode/
-.settings/
-.project
-.pydevproject
-
-# Jupyter Notebook 检查点
-.ipynb_checkpoints/
-
-# pytest 缓存
-.pytest_cache/
-
-# coverage 报告
-htmlcov/
-.coverage
-.coverage.*
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Node.js (前端)
-frontend/node_modules/
-frontend/dist/
-frontend/.env.local
-frontend/.env.*.local
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
-frontend/pnpm-debug.log*
-frontend/.DS_Store

@@ -1,0 +1,17 @@
+# MySQL 数据库配置
+
+database:
+  # 数据库连接配置
+  host: localhost
+  port: 3306
+  username: root
+  password: 123456
+  database_name: agent_memory
+  
+  # 连接池配置
+  pool_size: 10
+  max_overflow: 20
+  pool_pre_ping: true
+  
+  # 字符集
+  charset: utf8mb4

@@ -1,12 +1,12 @@
 from typing import Callable
-from utils.prompt_loader import load_system_prompts, load_report_prompts
+from app.utils.prompt_loader import load_system_prompts, load_report_prompts
 from langchain.agents import AgentState
 from langchain.agents.middleware import wrap_tool_call, before_model, dynamic_prompt, ModelRequest
 from langchain.tools.tool_node import ToolCallRequest
 from langchain_core.messages import ToolMessage
 from langgraph.runtime import Runtime
 from langgraph.types import Command
-from utils.logger_handler import logger
+from app.utils.logger_handler import logger
 
 
 @wrap_tool_call
@@ -22,9 +22,6 @@ def monitor_tool(
     try:
         result = handler(request)
         logger.info(f"[tool monitor]工具{request.tool_call['name']}调用成功")
-
-        if request.tool_call['name'] == "fill_context_for_report":
-            request.runtime.context["report"] = True
 
         return result
     except Exception as e:

@@ -26,23 +26,37 @@ class ReactAgent:
             tools=tool_manager.get_all_tools(),
             middleware=[agent_middleware, log_before_agent_call, switch_prompt],
         )
+        self.memory_service = None
     
-    def execute_stream(self, query: str):
-        """流式执行"""
+    def execute_stream(self, messages: list):
+        """
+        流式执行
+        :param messages: 完整的消息列表（包含历史对话和当前问题）
+        """
         input_dict = {
-            "messages": [
-                {"role": "user", "content": query},
-            ]
+            "messages": messages
         }
+        
+        # 调试输出：打印实际发送给 LLM 的消息
+        print(f"\n=== 发送给 LLM 的消息 ===")
+        for msg in messages:
+            role = msg.get('role', 'unknown')
+            content_preview = msg.get('content', '')[:200]
+            print(f"[{role}]: {content_preview}...")
+        print(f"=== 消息结束 ===\n")
         
         for chunk in self.agent.stream(input_dict, stream_mode="values", context={"report": False}):
             latest_message = chunk["messages"][-1]
             if latest_message.content:
                 yield latest_message.content.strip() + "\n"
     
-    def execute(self, query: str) -> str:
-        """同步执行"""
+    def execute(self, messages: list) -> str:
+        """
+        同步执行
+        :param messages: 完整的消息列表
+        :return: 完整响应文本
+        """
         response = ""
-        for chunk in self.execute_stream(query):
+        for chunk in self.execute_stream(messages):
             response += chunk
         return response

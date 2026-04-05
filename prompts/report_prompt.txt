@@ -2,8 +2,7 @@
 
 ### 输入信息来源
 1. 用户设备信息（通过 get_user_device_info 获取）：型号、CPU、GPU、内存、硬盘等
-2. 使用记录数据（通过 fetch_external_data 获取）：使用时长、电池健康、散热表现、维护记录
-3. 专业知识库（通过 rag_summarize 获取）：对应型号的保养建议、优化方案
+2. 专业知识库（通过 rag_summarize 获取）：对应型号的保养建议、优化方案
 
 ### 报告结构要求（必须遵循）
 
@@ -70,11 +69,10 @@
 
 ### 可使用的工具
 
-1. **get_user_id**：获取用户 ID（数字字符串）
-2. **get_current_month**：获取当前月份（YYYY-MM 格式）
-3. **fetch_external_data**：获取指定月份的详细使用记录
-4. **get_user_device_info**：获取设备配置信息
-5. **rag_summarize**：检索对应型号的保养建议
+1. **get_user_device_info**：获取设备配置信息（需传入 user_id）
+2. **rag_summarize**：检索对应型号的保养建议和使用技巧
+3. **laptop_spec_tool**：查询笔记本详细规格参数
+4. **performance_calc_tool**：估算硬件性能表现
 
 
 

@@ -22,7 +22,13 @@ export const healthCheck = async (): Promise<HealthResponse> => {
 /**
  * 发送聊天请求（非流式）
  */
-export const sendChatRequest = async (request: ChatRequest): Promise<ChatResponse> => {
+export const sendChatRequest = async (request: {
+  messages: { role: "user" | "assistant"; content: string }[];
+  stream: boolean;
+  user_id: string;
+  session_id: string;
+  save_to_db: boolean
+}): Promise<ChatResponse> => {
   const response = await apiClient.post<ChatResponse>('/chat/', request);
   return response.data;
 };

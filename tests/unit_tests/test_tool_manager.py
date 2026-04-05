@@ -33,11 +33,10 @@ class TestToolManager:
         
         # 验证默认注册的工具数量
         expected_tools = [
-            "rag_summarize", "get_weather", "get_user_location", "get_user_id",
-            "get_current_month", "fetch_external_data", "fill_context_for_report",
-            "get_user_device_info", "laptop_spec_tool", "model_compare_tool",
-            "fault_diagnose_tool", "purchase_recommend_tool", "memory_tool",
-            "performance_calc_tool", "structured_output_tool"
+            "rag_summarize", "get_user_device_info",
+            "laptop_spec_tool", "model_compare_tool",
+            "fault_diagnose_tool", "purchase_recommend_tool",
+            "performance_calc_tool"
         ]
         
         assert len(tools) == len(expected_tools)
@@ -53,8 +52,8 @@ class TestToolManager:
     def test_get_tool_by_name_multiple(self, tool_manager):
         """测试获取多个工具"""
         tool_names = [
-            "rag_summarize", "get_weather", "laptop_spec_tool", 
-            "fault_diagnose_tool", "memory_tool"
+            "rag_summarize", "laptop_spec_tool", 
+            "fault_diagnose_tool", "purchase_recommend_tool"
         ]
         
         for name in tool_names:

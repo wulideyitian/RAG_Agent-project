@@ -1,8 +1,9 @@
 """
 Agent 对话业务服务
 封装 Agent 对话的核心业务逻辑
+支持对话记录的批量保存（可选）
 """
-from typing import Generator
+from typing import Generator, Optional
 from core.agent.react_agent import ReactAgent
 import os
 
@@ -11,6 +12,7 @@ class AgentService:
     """
     Agent 对话服务
     提供流式和非流式的问答接口
+    支持长期记忆存储和检索
     """
     
     def __init__(self):
@@ -18,6 +20,7 @@ class AgentService:
         self._check_env()
         self.agent = ReactAgent()
     
+
     def _check_env(self):
         """检查必要的环境变量是否配置"""
         required_vars = ['DASHSCOPE_API_KEY']
@@ -32,21 +35,31 @@ class AgentService:
                 f"请设置环境变量后再使用 Agent 服务"
             )
     
-    def execute_stream(self, query: str) -> Generator[str, None, None]:
+    def execute_stream(
+        self, 
+        messages: list,
+    ) -> Generator[str, None, None]:
         """
         执行流式问答
-        :param query: 用户提问
+        :param messages: 完整的消息列表（包含历史对话和当前问题）
         :return: 流式响应生成器
         """
-        yield from self.agent.execute_stream(query)
+        # 执行 Agent 并收集响应
+        response_chunks = []
+        for chunk in self.agent.execute_stream(messages):
+            response_chunks.append(chunk)
+            yield chunk
     
-    def execute(self, query: str) -> str:
+    def execute(
+        self, 
+        messages: list,
+    ) -> str:
         """
         执行同步问答（非流式）
-        :param query: 用户提问
+        :param messages: 完整的消息列表
         :return: 完整响应文本
         """
         response = ""
-        for chunk in self.agent.execute_stream(query):
+        for chunk in self.execute_stream(messages):
             response += chunk
         return response

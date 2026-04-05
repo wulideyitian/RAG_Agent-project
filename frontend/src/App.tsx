@@ -4,12 +4,46 @@ import type { Message } from './types';
 import './App.css';
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // 从 localStorage 恢复消息列表
+    try {
+      const saved = localStorage.getItem('chat_messages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 将时间字符串转回 Date 对象
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+      }
+    } catch (e) {
+      console.error('读取消息历史失败:', e);
+    }
+    return [];
+  });
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiStatus, setApiStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // 生成固定的 user_id 和 session_id（用于保持对话记忆）
+  // 使用 localStorage 持久化，页面刷新后仍保持相同 ID
+  const [userId] = useState(() => {
+    const saved = localStorage.getItem('chat_user_id');
+    if (saved) return saved;
+    const newId = `user_${Date.now().toString(36)}`;
+    localStorage.setItem('chat_user_id', newId);
+    return newId;
+  });
+  
+  const [sessionId] = useState(() => {
+    const saved = localStorage.getItem('chat_session_id');
+    if (saved) return saved;
+    const newId = `session_${Date.now().toString(36)}`;
+    localStorage.setItem('chat_session_id', newId);
+    return newId;
+  });
 
   // 检查 API 连接状态
   useEffect(() => {
@@ -24,6 +58,15 @@ function App() {
 
     checkApiHealth();
   }, []);
+
+  // 自动保存消息到 localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('chat_messages', JSON.stringify(messages));
+    } catch (e) {
+      console.error('保存消息历史失败:', e);
+    }
+  }, [messages]);
 
   // 自动滚动到底部
   useEffect(() => {
@@ -53,6 +96,7 @@ function App() {
       timestamp: new Date(),
     };
 
+    // 更新消息列表（添加用户消息）
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
@@ -68,11 +112,25 @@ function App() {
         timestamp: new Date(),
       },
     ]);
-// 发送非流式请求
+
+// 发送非流式请求（携带完整的消息历史）
     try {
       const { sendChatRequest } = await import('./services/api');
+      
+      // 构建完整的消息列表（包含之前的对话历史）
+      const messagesPayload = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+      
+      // 添加当前用户消息
+      messagesPayload.push({
+        role: 'user',
+        content: userMessage.content,
+      });
+      
       const response = await sendChatRequest({
-        query: userMessage.content,
+        messages: messagesPayload,
         stream: false,
       });
       
@@ -108,6 +166,13 @@ function App() {
     }
   };
 
+  const handleClearChat = () => {
+    if (window.confirm('确定要清空对话历史吗？')) {
+      setMessages([]);
+      localStorage.removeItem('chat_messages');
+    }
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-CN', {
       hour: '2-digit',
@@ -120,13 +185,22 @@ function App() {
       {/* 头部 */}
       <header className="app-header">
         <h1>💻 笔记本电脑智能问答助手</h1>
-        <div className={`status-indicator ${apiStatus}`}>
-          <span className="status-dot"></span>
-          <span className="status-text">
-            {apiStatus === 'connected' && '服务正常'}
-            {apiStatus === 'disconnected' && '服务断开'}
-            {apiStatus === 'checking' && '检查中...'}
-          </span>
+        <div className="header-actions">
+          <button 
+            onClick={handleClearChat}
+            className="clear-button"
+            title="清空对话历史"
+          >
+            🗑️ 清空对话
+          </button>
+          <div className={`status-indicator ${apiStatus}`}>
+            <span className="status-dot"></span>
+            <span className="status-text">
+              {apiStatus === 'connected' && '服务正常'}
+              {apiStatus === 'disconnected' && '服务断开'}
+              {apiStatus === 'checking' && '检查中...'}
+            </span>
+          </div>
         </div>
       </header>
 

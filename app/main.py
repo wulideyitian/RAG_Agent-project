@@ -6,6 +6,7 @@ from core.api.schemas.response import APIResponse
 from core.api.routes.chat_routes import router as chat_router
 from core.api.routes.file_routes import router as file_router
 from core.api.routes.rag_routes import router as rag_router
+from core.api.routes.memory_routes import router as memory_router
 from app.utils.logger_handler import logger
 import time
 
@@ -97,6 +98,7 @@ async def health_check():
 app.include_router(chat_router)
 app.include_router(file_router)
 app.include_router(rag_router)
+app.include_router(memory_router)  # 记忆管理路由
 
 
 if __name__ == "__main__":

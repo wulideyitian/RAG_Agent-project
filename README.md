@@ -11,8 +11,10 @@
 - [快速开始](#快速开始)
 - [项目结构](#项目结构)
 - [配置说明](#配置说明)
-- [API 接口](#api 接口)
+- [API 接口](#api-接口)
+- [测试](#测试)
 - [开发指南](#开发指南)
+- [常见问题](#常见问题)
 
 ---
 
@@ -22,6 +24,7 @@
 
 - **RAG (检索增强生成)**: 从专业知识库中检索相关信息，生成准确的回答
 - **Agent (智能体)**: 具备自主决策能力，能够处理复杂的多轮对话任务
+- **长期记忆**: 支持用户历史对话存储和检索，实现个性化服务
 - **前后端分离**: React 前端 + FastAPI 后端，支持高并发和灵活部署
 
 ### 应用场景
@@ -43,8 +46,11 @@
 |------|------|------|
 | **FastAPI** | >=0.104.0 | 高性能异步 Web 框架 |
 | **LangChain** | >=0.1.0 | LLM 应用开发框架 |
+| **LangGraph** | - | Agent 工作流编排 |
 | **ChromaDB** | >=0.4.0 | 向量数据库 |
 | **Dashscope** | >=1.14.0 | 通义千问大模型 SDK |
+| **SQLAlchemy** | >=2.0.0 | ORM 框架 |
+| **PyMySQL** | >=1.1.0 | MySQL 数据库驱动 |
 | **PyYAML** | >=6.0.1 | 配置文件解析 |
 | **Python-multipart** | >=0.0.6 | 文件上传支持 |
 
@@ -89,42 +95,31 @@
 - 任务规划与分解
 - 工具调用与协调
 - 记忆管理与上下文维护
+- ReAct 推理模式
+
+### 5. 长期记忆管理
+- 用户对话历史存储
+- 记忆检索与召回
+- 个性化服务支持
 
 ---
 
 ## 系统架构
 
 ```
-┌─────────────────┐
-│   React 前端    │
-│   (TypeScript)  │
-└────────┬────────┘
-         │ HTTP/REST API
-         ▼
-┌─────────────────┐
-│  FastAPI 后端   │
-│   (Python)      │
-└────────┬────────┘
-         │
-    ┌────┴────┬──────────┬──────────┐
-    ▼         ▼          ▼          ▼
-┌────────┐ ┌────────┐ ┌────────┐ ┌─────────┐
-│ Agent  │ │  RAG   │ │ Embedding│ │Vector DB│
-│ 模块   │ │ 模块   │ │  模块    │ │ Chroma  │
-└────────┘ └────────┘ └────────┘ └─────────┘
-```
 
-### 六大核心模块
+### 八大核心模块
 
 1. **Agent 模块** (`core/agent/`)
    - ReAct 模式实现
    - 工具管理器
    - 记忆管理
+   - 中间件支持
 
 2. **API 模块** (`core/api/`)
    - RESTful 路由
    - 请求/响应 Schema
-   - 中间件处理
+   - 异常处理
 
 3. **Embedding 模块** (`core/embedding/`)
    - 文本向量化
@@ -132,7 +127,7 @@
 
 4. **Loader 模块** (`core/loader/`)
    - 统一文档加载
-   - 多格式解析器
+   - 多格式解析器（PDF、Word、TXT、Markdown）
 
 5. **Preprocessing 模块** (`core/preprocessing/`)
    - 文本清洗
@@ -143,6 +138,17 @@
    - 检索器
    - 生成器
    - 向量存储管理
+
+7. **Service 模块** (`app/service/`)
+   - Agent 服务
+   - 文件服务
+   - 记忆服务
+
+8. **Utils 模块** (`app/utils/`)
+   - 配置管理
+   - 日志处理
+   - 文件处理
+   - Prompt 加载
 
 ---
 
@@ -175,14 +181,24 @@ npm install
 在项目根目录创建 `.env` 文件：
 
 ```bash
-# Dashscope API Key
+# Dashscope API Key（必需）
 DASHSCOPE_API_KEY=your_api_key_here
 
 # 其他配置（可选）
 LOG_LEVEL=INFO
 ```
 
-### 3. 启动服务
+> ⚠️ **重要提示**: `DASHSCOPE_API_KEY` 是必需的，请从阿里云 DashScope 平台获取。
+
+### 3. 初始化数据库（可选）
+
+如果使用 MySQL 存储用户记忆：
+
+```bash
+python scripts/init_database.py
+```
+
+### 4. 启动服务
 
 #### 启动后端服务
 
@@ -208,7 +224,7 @@ npm run dev
 
 前端服务将在 `http://localhost:5173` 启动（端口可能不同，以实际输出为准）
 
-### 4. 访问应用
+### 5. 访问应用
 
 打开浏览器访问：`http://localhost:5173`
 
@@ -220,18 +236,32 @@ npm run dev
 AI大模型RAG与智能体开发_Agent项目/
 ├── app/                          # 应用层（业务逻辑）
 │   ├── api/                      # API 相关
-│   │   ├── database/             # 数据库连接
+│   │   ├── database/             # 数据库连接和模型
 │   │   ├── file_routers/         # 文件路由
 │   │   └── models/               # 数据模型
 │   ├── core/                     # 核心配置
 │   ├── service/                  # 业务服务
+│   │   ├── agent_service.py      # Agent 服务
+│   │   ├── file_service.py       # 文件服务
+│   │   └── memory_service.py     # 记忆服务
 │   ├── utils/                    # 工具函数
+│   │   ├── config_handler.py     # 配置处理
+│   │   ├── logger_handler.py     # 日志处理
+│   │   ├── file_handler.py       # 文件处理
+│   │   └── prompt_loader.py      # Prompt 加载
 │   └── main.py                   # FastAPI 入口
 │
 ├── core/                         # 核心模块层
 │   ├── agent/                    # Agent 模块
+│   │   ├── react_agent.py        # ReAct Agent 实现
+│   │   ├── tool_manager.py       # 工具管理器
+│   │   └── memory.py             # 记忆管理
 │   ├── api/                      # API 模块
 │   │   ├── routes/               # API 路由
+│   │   │   ├── chat_routes.py    # 聊天路由
+│   │   │   ├── file_routes.py    # 文件路由
+│   │   │   ├── rag_routes.py     # RAG 路由
+│   │   │   └── memory_routes.py  # 记忆路由
 │   │   └── schemas/              # 数据 Schema
 │   ├── embedding/                # 嵌入模型
 │   ├── loader/                   # 文档加载
@@ -242,16 +272,22 @@ AI大模型RAG与智能体开发_Agent项目/
 │       ├── retriever.py          # 检索器
 │       └── vector_store.py       # 向量存储
 │
+├── agent/                        # Agent 工具和中间件
+│   └── tools/                    # 自定义工具
+│       ├── agent_tools.py        # Agent 工具集
+│       └── middleware.py         # 中间件
+│
 ├── frontend/                     # React 前端
 │   ├── src/
-│   │   ├── components/           # 组件
 │   │   ├── services/             # API 服务
-│   │   └── types/                # TypeScript 类型
+│   │   ├── types/                # TypeScript 类型
+│   │   └── App.tsx               # 主应用组件
 │   └── package.json
 │
 ├── config/                       # 配置文件
 │   ├── agent.yml                 # Agent 配置
 │   ├── chroma.yml                # ChromaDB 配置
+│   ├── database.yml              # 数据库配置
 │   ├── prompts.yml               # Prompt 配置
 │   └── rag.yml                   # RAG 配置
 │
@@ -261,13 +297,20 @@ AI大模型RAG与智能体开发_Agent项目/
 │   └── *.pdf, *.txt, *.csv       # 知识库文档
 │
 ├── prompts/                      # Prompt 模板
-│   ├── main_prompt.txt
-│   ├── rag_summarize.txt
-│   └── report_prompt.txt
+│   ├── main_prompt.txt           # 主 Prompt
+│   ├── rag_summarize.txt         # RAG 总结 Prompt
+│   └── report_prompt.txt         # 报告生成 Prompt
 │
 ├── logs/                         # 日志文件
 ├── chroma_db/                    # ChromaDB 数据
+├── scripts/                      # 脚本文件
+│   └── init_database.py          # 数据库初始化脚本
+├── tests/                        # 测试文件
+│   ├── unit_tests/               # 单元测试
+│   ├── integration_tests/        # 集成测试
+│   └── conftest.py               # pytest 配置
 ├── requirements.txt              # Python 依赖
+├── pytest.ini                    # pytest 配置
 └── README.md                     # 项目说明
 ```
 
@@ -297,6 +340,13 @@ laptop_specs_path: data/laptop_specs.csv       # 笔记本配置数据路径
 ```yaml
 # ChromaDB 连接配置
 persist_directory: ./chroma_db
+```
+
+#### `config/database.yml` - 数据库配置
+
+```yaml
+# MySQL 数据库配置
+database_url: mysql+pymysql://user:password@localhost:3306/laptop_agent
 ```
 
 #### `config/prompts.yml` - Prompt 配置
@@ -368,6 +418,43 @@ Content-Type: application/json
 
 ---
 
+## 测试
+
+### 运行单元测试
+
+```bash
+# 运行所有测试
+pytest tests/
+
+# 运行特定测试文件
+pytest tests/unit_tests/test_agent_memory.py
+
+# 带覆盖率报告
+pytest tests/ --cov=. --cov-report=html
+```
+
+### 测试目录结构
+
+```
+tests/
+├── unit_tests/               # 单元测试
+│   ├── test_agent_memory.py  # Agent 记忆测试
+│   ├── test_document_loader.py  # 文档加载测试
+│   ├── test_embed_model.py   # 嵌入模型测试
+│   ├── test_quality_checker.py  # 质量检查测试
+│   ├── test_rag_generator.py # RAG 生成器测试
+│   ├── test_retriever.py     # 检索器测试
+│   ├── test_text_cleaner.py  # 文本清洗测试
+│   ├── test_text_splitter.py # 文本分块测试
+│   ├── test_tool_manager.py  # 工具管理器测试
+│   └── test_vector_store.py  # 向量存储测试
+├── integration_tests/        # 集成测试（待补充）
+├── utils/                    # 测试工具
+└── conftest.py               # pytest 配置
+```
+
+---
+
 ## 开发指南
 
 ### 添加新的文档解析器
@@ -392,7 +479,7 @@ Content-Type: application/json
 ### 日志查看
 
 日志文件位于 `logs/` 目录，按日期命名：
-- `agent_20260402.log` - 最新日志
+- `agent_20260405.log` - 最新日志
 - 历史日志按日期归档
 
 ### 常见问题
@@ -404,21 +491,75 @@ Content-Type: application/json
 rm -rf chroma_db/*
 
 # 重新启动服务将自动初始化
+python app/main.py
 ```
 
 #### Q: 如何添加新的知识库文档？
 
 将文档放入 `data/` 目录，然后通过文件上传接口或重启服务自动加载。
 
+支持的格式：
+- PDF (.pdf)
+- Word (.docx, .doc)
+- TXT (.txt)
+- Markdown (.md)
+- CSV (.csv)
+
 #### Q: 如何更换大模型？
 
 修改 `config/rag.yml` 中的 `chat_model_name` 和 `embedding_model_name`。
+
+当前支持的模型：
+- 聊天模型：qwen3-max, qwen-plus, qwen-turbo
+- 嵌入模型：text-embedding-v4, text-embedding-v3
+
+#### Q: 如何配置 MySQL 数据库？
+
+1. 修改 `config/database.yml` 中的数据库连接信息
+2. 运行初始化脚本：`python scripts/init_database.py`
+3. 重启服务
+
+#### Q: 前端无法连接后端？
+
+确保：
+1. 后端服务已启动（`http://localhost:8000`）
+2. 前端配置的 API 地址正确（`frontend/src/services/api.ts`）
+3. CORS 配置允许前端域名
+
+#### Q: 导入错误 `ModuleNotFoundError`？
+
+确保在项目根目录运行命令，或者设置 PYTHONPATH：
+
+```bash
+# Windows PowerShell
+$env:PYTHONPATH="."
+python app/main.py
+
+# Linux/Mac
+export PYTHONPATH="."
+python app/main.py
+```
 
 ---
 
 ## 贡献指南
 
 欢迎提交 Issue 和 Pull Request！
+
+### 开发规范
+
+1. **代码风格**: 遵循 PEP 8 规范
+2. **提交信息**: 使用清晰的 commit message
+3. **测试**: 新功能需要添加对应的单元测试
+4. **文档**: 更新相关的文档和注释
+
+### 提交流程
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 提交 Pull Request
 
 ## 许可证
 
@@ -432,4 +573,6 @@ MIT License
 
 ---
 
-**最后更新时间**: 2026-04-03
+**最后更新时间**: 2026-04-05
+
+**版本**: 1.0.0

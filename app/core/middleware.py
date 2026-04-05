@@ -23,9 +23,6 @@ def monitor_tool(
         result = handler(request)
         logger.info(f"[tool monitor] 工具{request.tool_call['name']}调用成功")
 
-        if request.tool_call['name'] == "fill_context_for_report":
-            request.runtime.context["report"] = True
-
         return result
     except Exception as e:
         logger.error(f"工具{request.tool_call['name']}调用失败，原因：{str(e)}")

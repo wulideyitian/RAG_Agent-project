@@ -2,6 +2,8 @@
 export interface ChatRequest {
   query: string;
   stream?: boolean;
+  user_id?: string;  // 用户 ID，用于记忆管理
+  session_id?: string;  // 会话 ID，用于对话历史
   context?: any;
 }
 
