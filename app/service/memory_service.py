@@ -31,8 +31,15 @@ class MemoryService:
                 self.session.rollback()
             else:
                 self.session.commit()
+        except Exception as e:
+            # 确保即使 commit/rollback 失败也能关闭会话
+            try:
+                self.session.rollback()
+            except:
+                pass
         finally:
-            self._session_gen.close()
+            if hasattr(self, '_session_gen'):
+                self._session_gen.close()
     
     # ========== 用户记忆管理 ==========
     

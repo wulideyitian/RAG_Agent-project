@@ -5,6 +5,30 @@ data_path: data/
 md5_hex_store: md5.text
 allow_knowledge_file_type: ["txt", "pdf", "docx", "doc", "md", "markdown"]
 
+# 默认分块配置（通用）
 chunk_size: 800
 chunk_overlap: 200
 separators: ["\n\n", "\n", ".", "!", "?", "。", "！", "？", " ", ""]
+
+# 格式专属分块配置
+chunking:
+  # PDF 专属配置
+  pdf:
+    chunk_size: 80              # 更小的块，避免跨页内容混杂
+    chunk_overlap: 15           # 较小的重叠
+    remove_page_numbers: true   # 移除页码
+    merge_broken_lines: true    # 合并断行
+  
+  # Word 专属配置
+  docx:
+    chunk_size: 150             # 中等块大小，利用标题结构
+    chunk_overlap: 25           # 适中的重叠
+    respect_headings: true      # 尊重标题层级
+    heading_levels: [1, 2, 3]   # 提取的标题级别
+  
+  # Markdown 专属配置
+  md:
+    chunk_size: 200             # 较大的块，利用原生结构
+    chunk_overlap: 30           # 较大的重叠
+    split_by_heading: true      # 按标题分割
+    min_heading_level: 2        # 最小分块标题级别（从 ## 开始）

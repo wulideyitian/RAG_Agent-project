@@ -24,11 +24,12 @@ class RetrieverService:
         """
         try:
             if k:
-                # 动态调整 k 值
-                original_k = self.retriever.search_kwargs.get("k", 3)
-                self.retriever.search_kwargs["k"] = k
-                docs = self.retriever.invoke(query)
-                self.retriever.search_kwargs["k"] = original_k
+                # 创建新的检索器实例，避免修改共享状态
+                from app.utils.config_handler import chroma_conf
+                custom_retriever = self.vector_store.vector_store.as_retriever(
+                    search_kwargs={"k": k}
+                )
+                docs = custom_retriever.invoke(query)
             else:
                 docs = self.retriever.invoke(query)
             

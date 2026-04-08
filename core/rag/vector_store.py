@@ -94,7 +94,8 @@ class VectorStoreService:
         md5_file = get_abs_path(chroma_conf.get("md5_hex_store", "md5.txt"))
         
         if not os.path.exists(md5_file):
-            open(md5_file, "w", encoding="utf-8").close()
+            with open(md5_file, "w", encoding="utf-8") as f:
+                pass
             return False
         
         with open(md5_file, "r", encoding="utf-8") as f:

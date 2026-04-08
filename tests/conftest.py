@@ -42,7 +42,8 @@ def enable_logging():
 
 
 # 导入通用测试工具（使用绝对路径）
-from tests.utils.test_helpers import (
+# 注意：由于已将 tests 目录加入 sys.path，可以直接导入
+from utils.test_helpers import (
     temp_file,
     temp_dir,
     sample_text,
