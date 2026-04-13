@@ -222,6 +222,20 @@ chroma_db/
 md5.txt
 md5.text
 
+# ========== 测试相关 ==========
+# 测试报告和覆盖率
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+junit.xml
+pytest-results.xml
+
+# 测试数据和临时文件
+tests/temp/
+tests/fixtures/*.db
+tests/fixtures/*.sqlite3
+
 # ========== 数据文件（不提交知识库文档）==========
 # 知识库文档(PDF、Word 等二进制文件)
 data/*.pdf
