@@ -5,6 +5,8 @@ Agent 对话业务服务
 """
 from typing import Generator, Optional
 from core.agent.react_agent import ReactAgent
+from core.agent.context_manager import ContextManager
+from app.utils.config_handler import agent_conf
 import os
 
 
@@ -19,6 +21,16 @@ class AgentService:
         # 检查必要的环境变量
         self._check_env()
         self.agent = ReactAgent()
+        
+        # 初始化上下文管理器
+        context_config = agent_conf.get("context_config", {})
+        self.context_manager = ContextManager(
+            max_tokens=context_config.get("max_tokens", 6000),
+            window_size=context_config.get("window_size", 10),
+            min_keep_turns=context_config.get("min_keep_turns", 5),
+            strategy=context_config.get("strategy", "hybrid"),
+            model_encoding=context_config.get("model_encoding", "cl100k_base"),
+        )
     
 
     def _check_env(self):
@@ -44,9 +56,12 @@ class AgentService:
         :param messages: 完整的消息列表（包含历史对话和当前问题）
         :return: 流式响应生成器
         """
+        # 优化上下文
+        optimized_messages, stats = self.context_manager.optimize_context(messages)
+        
         # 执行 Agent 并收集响应
         response_chunks = []
-        for chunk in self.agent.execute_stream(messages):
+        for chunk in self.agent.execute_stream(optimized_messages):
             response_chunks.append(chunk)
             yield chunk
     
@@ -59,7 +74,10 @@ class AgentService:
         :param messages: 完整的消息列表
         :return: 完整响应文本
         """
+        # 优化上下文
+        optimized_messages, stats = self.context_manager.optimize_context(messages)
+        
         response = ""
-        for chunk in self.execute_stream(messages):
+        for chunk in self.execute_stream(optimized_messages):
             response += chunk
         return response

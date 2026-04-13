@@ -199,38 +199,67 @@ logs/
 tmp/
 temp/
 
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
 # ========== 数据库与向量库 ==========
+# ChromaDB 向量数据库
 chroma_db/
+*.chroma
+
+# SQLite 数据库
 *.sqlite3
+*.sqlite3-journal
 *.db
+
+# MySQL 相关(如果使用本地 MySQL)
+*.sql
+!scripts/*.sql  # 但保留初始化脚本
 
 # ========== MD5 记录 ==========
 md5.txt
 md5.text
 
 # ========== 数据文件（不提交知识库文档）==========
-# 知识库文档（PDF、Word 等二进制文件）
+# 知识库文档(PDF、Word 等二进制文件)
 data/*.pdf
 data/*.docx
 data/*.doc
+data/*.pptx
+data/*.xlsx
 
-# 知识库文本文件（避免知识库文档过大）
+# 知识库文本文件(避免知识库文档过大)
 data/*.txt
 data/*.csv
 data/*.md
 
 # 外部数据文件
 data/external/*.csv
+data/external/*.json
+data/external/*.xlsx
 
 # 上传的文件目录
 data/uploads/*
 !data/uploads/.gitkeep
 
-# ========== 配置文件（敏感信息）==========
+# 数据处理中间文件
+data/processed/
+data/temp/
+data/cache/
+
+# ========== 配置文件(敏感信息)==========
 # 包含 API Key 等敏感信息的配置文件
 config/local.yml
 config/secrets.yml
-*.secret
+config/*.secret
+.env
+.env.local
+.env.*.local
+
+# 用户自定义配置(可选提交)
+config/user_config.yml
 
 # ========== 其他 ==========
 # OS generated files
@@ -241,3 +270,28 @@ config/secrets.yml
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Git merge conflicts
+*.orig
+*.rej
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Lock files (except package managers)
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Model cache and downloads
+models/
+*.bin
+*.pt
+*.pth
+.onnx
+
+# Embedding cache
+embedding_cache/
+vector_cache/
