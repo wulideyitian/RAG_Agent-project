@@ -63,7 +63,7 @@ class RAGGenerator:
         
         return "\n\n".join(context_parts)
     
-    def rag_summarize(self, query: str) -> str:
+    async def rag_summarize(self, query: str) -> str:
         """
         完整的 RAG 流程：检索 + 生成
         :param query: 用户问题
@@ -72,6 +72,6 @@ class RAGGenerator:
         from core.rag.retriever import RetrieverService
         
         retriever = RetrieverService()
-        context_docs = retriever.retrieve(query)
+        context_docs = await retriever.retrieve(query)
         
         return self.generate(query, context_docs)

@@ -38,7 +38,7 @@ def _get_config_path(key: str) -> str:
 
 
 @tool(description="RAG 检索工具：从向量库精准检索笔记本相关资料。入参 query 为检索词，支持：'选购指南'、'故障排查'、'硬件知识'、'软件系统'、'维护保养'、'使用技巧'等维度。返回匹配的专业解答。")
-def rag_summarize(query: str) -> str:
+async def rag_summarize(query: str) -> str:
     """
     RAG 核心检索工具，支持多维度检索
     :param query: 检索词，如 'RTX 4060 显卡性能'、'蓝屏故障处理'、'电池保养方法'
@@ -47,7 +47,7 @@ def rag_summarize(query: str) -> str:
     rag = get_rag_generator()
     if rag is None:
         return "RAG 服务初始化失败，请稍后重试"
-    return rag.rag_summarize(query)
+    return await rag.rag_summarize(query)
 
 
 @tool(description="获取用户的笔记本设备详细信息，包括型号、CPU、内存、硬盘、显卡等配置。入参 user_id 为用户 ID（必需）。")
@@ -201,7 +201,7 @@ def model_compare_tool(model_a: str, model_b: str) -> str:
 
 
 @tool(description="故障诊断工具：根据用户描述的症状定位故障原因，给出排查步骤。入参 symptoms 为故障描述（如'开机黑屏'、'风扇狂转掉帧'）。返回可能原因、解决步骤、送修建议。")
-def fault_diagnose_tool(symptoms: str) -> str:
+async def fault_diagnose_tool(symptoms: str) -> str:
     """
     故障诊断核心工具
     :param symptoms: 故障症状描述，如'开机黑屏，风扇不转'、'游戏掉帧发热'
@@ -211,7 +211,7 @@ def fault_diagnose_tool(symptoms: str) -> str:
         # Step 1: RAG 检索故障案例库
         rag_query = f"笔记本故障：{symptoms}"
         rag_gen = get_rag_generator()
-        rag_result = rag_gen.rag_summarize(rag_query) if rag_gen else "RAG 检索服务暂时不可用"
+        rag_result = await rag_gen.rag_summarize(rag_query) if rag_gen else "RAG 检索服务暂时不可用"
         
         # Step 2: 关键词匹配（规则引擎）
         diagnosis_rules = {
@@ -302,7 +302,7 @@ def fault_diagnose_tool(symptoms: str) -> str:
 
 
 @tool(description="购机推荐工具：根据预算和用途推荐笔记本。入参 budget 为预算（如'6000 元'），usage 为用途（游戏/办公/设计/编程）。返回推荐清单含型号、配置、理由、避坑点。")
-def purchase_recommend_tool(budget: str, usage: str) -> str:
+async def purchase_recommend_tool(budget: str, usage: str) -> str:
     """
     购机推荐工具
     :param budget: 预算范围，如'6000 元'、'5000-7000 元'
@@ -378,7 +378,7 @@ def purchase_recommend_tool(budget: str, usage: str) -> str:
         if not recommendations:
             # RAG 检索备选
             rag_gen = get_rag_generator()
-            rag_result = rag_gen.rag_summarize(f"{usage}笔记本推荐 预算{budget}") if rag_gen else "RAG 检索服务暂时不可用"
+            rag_result = await rag_gen.rag_summarize(f"{usage}笔记本推荐 预算{budget}") if rag_gen else "RAG 检索服务暂时不可用"
             return f"未找到完全匹配的型号，基于 RAG 检索建议：\n{rag_result}"
         
         result = f"【{usage}笔记本推荐（预算{budget}）】\n\n"
@@ -409,7 +409,7 @@ def purchase_recommend_tool(budget: str, usage: str) -> str:
 
 
 @tool(description="性能计算工具：估算显卡功耗、游戏帧率、续航时间等。入参 gpu_model 为显卡型号（如'RTX 4060'），可选 game 为游戏名称。返回功耗值、预估帧率等数据。")
-def performance_calc_tool(gpu_model: str, game: str = None) -> str:
+async def performance_calc_tool(gpu_model: str, game: str = None) -> str:
     """
     性能估算工具
     :param gpu_model: 显卡型号，如'RTX 4060'、'RTX 4070'
@@ -441,7 +441,7 @@ def performance_calc_tool(gpu_model: str, game: str = None) -> str:
     if not matched_gpu:
         # RAG 检索
         rag_gen = get_rag_generator()
-        rag_result = rag_gen.rag_summarize(f"{gpu_model} 显卡功耗和性能") if rag_gen else "RAG 检索服务暂时不可用"
+        rag_result = await rag_gen.rag_summarize(f"{gpu_model} 显卡功耗和性能") if rag_gen else "RAG 检索服务暂时不可用"
         return f"未找到'{gpu_model}'的详细数据，基于 RAG 检索：\n{rag_result}"
     
     gpu_data = gpu_specs[matched_gpu]

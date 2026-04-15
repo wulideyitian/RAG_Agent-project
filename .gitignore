@@ -164,6 +164,10 @@ frontend/.env.*.local
 .vscode/
 *.code-workspace
 
+# Lingma / Alibaba Cloud IDE
+.lingma/
+.cloudide/
+
 # IntelliJ
 *.ipr
 *.iws
@@ -249,6 +253,11 @@ data/*.txt
 data/*.csv
 data/*.md
 
+# 但保留示例和模板文件
+!data/laptop_specs.csv
+!data/fault_cases.md
+!data/external/records.csv
+
 # 外部数据文件
 data/external/*.csv
 data/external/*.json
@@ -304,8 +313,65 @@ models/
 *.bin
 *.pt
 *.pth
-.onnx
+*.onnx
+
+# HuggingFace 模型缓存
+.cache/huggingface/
+.huggingface/
 
 # Embedding cache
 embedding_cache/
 vector_cache/
+
+# ========== Reranker 相关 ==========
+# BGE-reranker 模型缓存（如果使用本地路径）
+reranker_models/
+*.reranker
+
+# LangChain 缓存
+.langchain/
+langchain_cache/
+
+# Vector store backups
+*.vectorstore
+*.vsbackup
+
+# ========== 验证和临时脚本 ==========
+# 临时测试脚本（单个文件，非 tests 目录）
+test_single_*.py
+temp_test_*.py
+
+# ========== 性能分析和调试 ==========
+*.prof
+*.pstats
+profile/
+debug.log
+
+# ========== Docker 相关 ==========
+.dockerenv
+.dockerignore
+docker-compose.override.yml
+
+# LangChain 缓存
+.langchain/
+langchain_cache/
+
+# Vector store backups
+*.vectorstore
+*.vsbackup
+
+# ========== 验证和临时脚本 ==========
+# 临时测试脚本（单个文件，非 tests 目录）
+test_single_*.py
+temp_test_*.py
+
+# ========== 性能分析和调试 ==========
+*.prof
+*.pstats
+profile/
+debug.log
+
+# ========== Docker 相关 ==========
+.dockerenv
+.dockerignore
+docker-compose.override.yml

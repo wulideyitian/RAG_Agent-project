@@ -24,7 +24,7 @@ async def rag_query(request: RAGQuery):
         from core.rag.generator import RAGGenerator
         
         generator = RAGGenerator()
-        response = generator.rag_summarize(request.query)
+        response = await generator.rag_summarize(request.query)
         
         return ChatResponse(
             response=response,
